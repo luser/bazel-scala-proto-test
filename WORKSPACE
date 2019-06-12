@@ -1,32 +1,51 @@
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
+load("@bazel_tools//tools/build_defs/repo:git.bzl", "git_repository")
 
-rules_scala_version="73e266be96037ff351f0d3aa01238ed4c6f7271c"
+# Load rules scala annex
+rules_scala_annex_commit = "3e22acd4e0977d6c0010c69285a8b6a842897d00"
 http_archive(
-    name = "io_bazel_rules_scala",
-    strip_prefix = "rules_scala-%s" % rules_scala_version,
-    type = "zip",
-    url = "https://github.com/bazelbuild/rules_scala/archive/%s.zip" % rules_scala_version,
+    name = "rules_scala_annex",
+    sha256 = "05dee1492b64f28ddb011ddb582395bd3bfade839b57e4945487d74e3ece9a7c",
+    strip_prefix = "rules_scala-{}".format(rules_scala_annex_commit),
+    url = "https://github.com/higherkindness/rules_scala/archive/{}.zip".format(rules_scala_annex_commit),
 )
 
-load("@io_bazel_rules_scala//scala:toolchains.bzl", "scala_register_toolchains")
+http_archive(
+    name = "rules_jvm_external",
+    sha256 = "515ee5265387b88e4547b34a57393d2bcb1101314bcc5360ec7a482792556f42",
+    strip_prefix = "rules_jvm_external-2.1",
+    url = "https://github.com/bazelbuild/rules_jvm_external/archive/2.1.zip",
+)
+
+load("@rules_scala_annex//rules/scala:workspace.bzl", "scala_register_toolchains", "scala_repositories")
+scala_repositories()
 scala_register_toolchains()
 
-load("@io_bazel_rules_scala//scala:scala.bzl", "scala_repositories")
-scala_repositories()
-
-load("@io_bazel_rules_scala//scala_proto:scala_proto.bzl", "scala_proto_repositories")
+load("@rules_scala_annex//rules/scala_proto:workspace.bzl", "scala_proto_register_toolchains", "scala_proto_repositories")
 scala_proto_repositories()
+scala_proto_register_toolchains()
 
+
+# Load bazel skylib and google protobuf
 http_archive(
-    name = "bazel_skylib",
-    sha256 = "bbccf674aa441c266df9894182d80de104cabd19be98be002f6d478aaa31574d",
-    strip_prefix = "bazel-skylib-2169ae1c374aab4a09aa90e65efe1a3aad4e279b",
-    urls = ["https://github.com/bazelbuild/bazel-skylib/archive/2169ae1c374aab4a09aa90e65efe1a3aad4e279b.tar.gz"],
+        name = "bazel_skylib",
+        sha256 = "bbccf674aa441c266df9894182d80de104cabd19be98be002f6d478aaa31574d",
+        strip_prefix = "bazel-skylib-2169ae1c374aab4a09aa90e65efe1a3aad4e279b",
+         urls = ["https://github.com/bazelbuild/bazel-skylib/archive/2169ae1c374aab4a09aa90e65efe1a3aad4e279b.tar.gz"],
 )
 
-protobuf_version="61301f01552dd84d744a05c88af95833c600a1a7"
 http_archive(
     name = "com_google_protobuf",
-    url = "https://github.com/protocolbuffers/protobuf/archive/%s.tar.gz" % protobuf_version,
-    strip_prefix = "protobuf-%s" % protobuf_version,
+    sha256 = "0963c6ae20340ce41f225a99cacbcba8422cebe4f82937f3d9fa3f5dd7ae7342",
+    strip_prefix = "protobuf-9f604ac5043e9ab127b99420e957504f2149adbe",
+    urls = ["https://github.com/google/protobuf/archive/9f604ac5043e9ab127b99420e957504f2149adbe.zip"],
+)
+
+load("@com_google_protobuf//:protobuf_deps.bzl", "protobuf_deps")
+protobuf_deps()
+
+# Specify the scala compiler we wish to use; in this case, we'll use the default one specified in rules_scala_annex
+bind(
+    name = "default_scala",
+    actual = "@rules_scala_annex//src/main/scala:zinc_2_11_11",
 )
