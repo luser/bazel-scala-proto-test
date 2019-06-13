@@ -44,8 +44,24 @@ http_archive(
 load("@com_google_protobuf//:protobuf_deps.bzl", "protobuf_deps")
 protobuf_deps()
 
+# com.google.protobuf/protobuf-java
+
 # Specify the scala compiler we wish to use; in this case, we'll use the default one specified in rules_scala_annex
 bind(
     name = "default_scala",
     actual = "@rules_scala_annex//src/main/scala:zinc_2_12_8",
+)
+
+load("@rules_jvm_external//:defs.bzl", "maven_install")
+
+# Load maven dependencies
+maven_install(
+    artifacts = [
+        "com.google.protobuf:protobuf-java:3.4.0",
+        "com.thesamet.scalapb:scalapb-runtime_2.12:0.8.4",
+        "com.thesamet.scalapb:lenses_2.12:0.8.4",
+    ],
+    repositories = [
+        "https://repo1.maven.org/maven2",
+    ],
 )
